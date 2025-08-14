@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  pmon:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./pmon.db
+      - SCHEDULER_ENABLED=true
+      - SCHEDULER_INTERVAL=60
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL (optional - for production)
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=pmon
+      - POSTGRES_USER=pmon_user
+      - POSTGRES_PASSWORD=pmon_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
